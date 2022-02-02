@@ -1,0 +1,9 @@
+name: Indicia Advanced Reports
+description: A module which provides user report outputs that are mash-ups, Elasticsearch based, or more complex than simple reporting services calls. Uses REST API using JWT authentication.
+package: Indicia
+type: module
+core: 8.x
+core_version_requirement: ^8 || ^9
+dependencies:
+  - iform
+  - simple_oauth

@@ -1,0 +1,8 @@
+indicia_advanced_reports.advanced_reports:
+  path: "/api/v2/advanced_reports/{report}"
+  defaults:
+    _controller: '\Drupal\indicia_advanced_reports\AdvancedReportController::get'
+    _title: "Advanced reports"
+  requirements:
+    _user_is_logged_in: "TRUE"
+  methods: [OPTIONS, GET]
