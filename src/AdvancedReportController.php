@@ -21,7 +21,7 @@ if (!defined('INDICIA_ID_FIELD')) {
  * @param null $errors
  *   If multiple errors then it can be passed as an array.
  */
-function error_print($code, $status, $title, $errors = null)
+function error($code, $status, $title, $errors = null)
 {
   $headers = [
     'Status' => $code . ' ' . $status,
@@ -67,22 +67,19 @@ class AdvancedReportController extends ControllerBase
   {
     $validReports = ['user-stats', 'counts', 'recorded-taxa-list'];
     if (empty($report) || !in_array($report, $validReports)) {
-      return error_print(
-        400,
-        'Bad Request',
-        'Missing or incorrect report url.'
-      );
+      return error(400, 'Bad Request', 'Missing or incorrect report url.');
     }
-
-    if ($filterError = $this->validateFilterParameters($report)) {
-      return $filterError;
-    }
-    $filters = $this->getFilters($report);
 
     $user = $this->currentUser()->getAccount();
     $userId = $user->get(INDICIA_ID_FIELD)->value;
 
+    if ($filterError = $this->validateFilterParameters($report, $userId)) {
+      return $filterError;
+    }
+    $filters = $this->getFilters($report);
+
     require_once 'RecorderMetrics.php';
+
     $rm = new \RecorderMetrics($userId);
 
     // Call report code.
@@ -100,7 +97,7 @@ class AdvancedReportController extends ControllerBase
           foreach ($categories as $category) {
             $validCategories = ['records', 'species', 'photos', 'recorders'];
             if (!in_array($category, $validCategories)) {
-              return error_print(
+              return error(
                 400,
                 'Bad Request',
                 "Parameter for categories contains invalid value $category."
@@ -129,11 +126,7 @@ class AdvancedReportController extends ControllerBase
         break;
 
       default:
-        return error_print(
-          400,
-          'Bad Request',
-          'Unknown advanced report requested.'
-        );
+        return error(400, 'Bad Request', 'Unknown advanced report requested.');
     }
     $headers = [
       'Status' => '200 OK',
@@ -157,26 +150,26 @@ class AdvancedReportController extends ControllerBase
    * @return Symfony\Component\HttpFoundation\JsonResponse
    *   Error response or NULL.
    */
-  private function validateFilterParameters($report)
+  private function validateFilterParameters($report, $userId)
   {
     // All requests must be for a survey or a group/activity.
     if (empty($_GET['survey_id']) && empty($_GET['group_id'])) {
       // @todo Add support for website_id filter, but need to check error
       // handling if species list huge.
-      return error_print(
+      return error(
         400,
         'Bad Request',
         'Parameter for survey_id or group_id missing from query string.'
       );
     }
     // Some have optional user filter.
-    if (!empty($_GET['user_id']) && $report !== 'user-stats') {
+    if (
+      !empty($_GET['user_id']) &&
+      $_GET['user_id'] !== $userId &&
+      $report !== 'user-stats'
+    ) {
       // Can only request your own data.
-      return error_print(
-        401,
-        'Unauthorized',
-        "Cannot request other user's data."
-      );
+      return error(401, 'Unauthorized', "Cannot request other user's data.");
     }
     return null;
   }

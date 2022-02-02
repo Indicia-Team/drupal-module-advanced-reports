@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  * @param null $errors
  *   If multiple errors then it can be passed as an array.
  */
-function error_print($code, $status, $title, $errors = null)
+function error_print2($code, $status, $title, $errors = null)
 {
   $headers = [
     'Status' => $code . ' ' . $status,
@@ -558,12 +558,11 @@ JSON;
       $errorInfo = json_decode($response);
       if ($errorInfo && $errorInfo->status) {
         // If a handled server error, we can set a proper response error.
-        error_print($httpCode, $errorInfo->status, $errorInfo->message);
+        return error_print2($httpCode, $errorInfo->status, $errorInfo->message);
       } else {
         // If we can't do it properly, still best not to swallow it.
-        error_print(500, 'Internal Server Error', $response);
+        return error_print2(500, 'Internal Server Error', $response);
       }
-      throw new ApiAbort();
     }
     return json_decode($response);
   }
