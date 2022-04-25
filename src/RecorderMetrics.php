@@ -198,10 +198,15 @@ JSON;
       $userInfo =
         $userRecordingData->aggregations->user_limit->by_user->buckets[0];
       // Species ratio is a simple calculation.
-      $speciesRatio = round(
-        (100 * $userInfo->species_count->value) / $this->projectSpeciesCount,
-        1
-      );
+      if ($this->projectSpeciesCount) {
+        $speciesRatio = round(
+          (100 * $userInfo->species_count->value) / $this->projectSpeciesCount,
+          1
+        );
+      }
+      else {
+        $speciesRatio = 0;
+      }
       // Activity ratio requires number of days in the recording season during
       // the period in which they'd contributed to the project.
       $firstInSeasonRecordDateArray = $this->getFirstInSeasonDateArray(
