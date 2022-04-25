@@ -3,6 +3,7 @@
 namespace Drupal\indicia_advanced_reports;
 
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\user\Entity\User;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 if (!defined('INDICIA_ID_FIELD')) {
@@ -70,7 +71,7 @@ class AdvancedReportController extends ControllerBase
       return error(400, 'Bad Request', 'Missing or incorrect report url.');
     }
 
-    $user = $this->currentUser()->getAccount();
+    $user = User::load($this->currentUser()->id());
     $userId = $user->get(INDICIA_ID_FIELD)->value;
 
     if ($filterError = $this->validateFilterParameters($report, $userId)) {
