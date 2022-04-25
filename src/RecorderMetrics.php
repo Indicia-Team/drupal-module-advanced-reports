@@ -19,7 +19,7 @@
  *
  * @author Indicia Team
  * @license http://www.gnu.org/licenses/gpl.html GPL 3.0
- * @link https://github.com/indicia-team/client_helpers
+ * @link https://github.com/Indicia-Team/drupal-module-advanced-reports
  */
 
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -194,9 +194,7 @@ JSON;
     $this->applyFilters($filters);
     $this->getSpeciesWithRarity();
     $userRecordingData = $this->getUserRecordingData();
-    if (
-      count($userRecordingData->aggregations->user_limit->by_user->buckets) > 0
-    ) {
+    if (count($userRecordingData->aggregations->user_limit->by_user->buckets) > 0) {
       $userInfo =
         $userRecordingData->aggregations->user_limit->by_user->buckets[0];
       // Species ratio is a simple calculation.
@@ -216,7 +214,8 @@ JSON;
         $firstInSeasonRecordDateArray,
         $lastInSeasonRecordDateArray
       );
-      // Now a simple ratio calculation, unless there were no in-season days yet.
+      // Now a simple ratio calculation, unless there were no in-season days
+      // yet.
       if ($inSeasonRecordingDaysTotal === 0) {
         $activityRatio = NULL;
       }
@@ -578,7 +577,7 @@ JSON;
       $request = <<<JSON
        {
          "size": "0",
-         "query": $this->esQuery
+         "query": $this->esQuery,
          "aggs": {
            "species_list": {
              "terms": {
