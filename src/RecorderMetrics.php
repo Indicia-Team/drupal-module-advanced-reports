@@ -1,44 +1,5 @@
 <?php
 
-use Symfony\Component\HttpFoundation\JsonResponse;
-
-/**
- * Prints to log and returns a json formatted error back to the client.
- *
- * @param int $code
- *   Status code of the header.
- * @param string $status
- *   Status of the header.
- * @param string $title
- *   Title of the error.
- * @param null $errors
- *   If multiple errors then it can be passed as an array.
- */
-function error_print2($code, $status, $title, $errors = null)
-{
-  $headers = [
-    'Status' => $code . ' ' . $status,
-    'Access-Control-Allow-Origin' => '*',
-    'Access-Control-Allow-Methods' => 'GET,PUT,OPTIONS',
-    'Access-Control-Allow-Headers' => 'authorization, x-api-key',
-  ];
-  if (is_null($errors)) {
-    $data = [
-      'errors' => [
-        [
-          'status' => (string) $code,
-          'title' => $title,
-        ],
-      ],
-    ];
-  } else {
-    $data = [
-      'errors' => $errors,
-    ];
-  }
-  return new JsonResponse($data, $code, $headers);
-}
-
 /**
  * @file
  * A helper class for obtaining recorder metrics data.
@@ -61,12 +22,49 @@ function error_print2($code, $status, $title, $errors = null)
  * @link https://github.com/indicia-team/client_helpers
  */
 
+use Symfony\Component\HttpFoundation\JsonResponse;
+
+/**
+ * Prints to log and returns a json formatted error back to the client.
+ *
+ * @param int $code
+ *   Status code of the header.
+ * @param string $status
+ *   Status of the header.
+ * @param string $title
+ *   Title of the error.
+ * @param array $errors
+ *   If multiple errors then it can be passed as an array.
+ */
+function error_print2($code, $status, $title, $errors = NULL) {
+  $headers = [
+    'Status' => $code . ' ' . $status,
+    'Access-Control-Allow-Origin' => '*',
+    'Access-Control-Allow-Methods' => 'GET,PUT,OPTIONS',
+    'Access-Control-Allow-Headers' => 'authorization, x-api-key',
+  ];
+  if (is_null($errors)) {
+    $data = [
+      'errors' => [
+        [
+          'status' => (string) $code,
+          'title' => $title,
+        ],
+      ],
+    ];
+  }
+  else {
+    $data = [
+      'errors' => $errors,
+    ];
+  }
+  return new JsonResponse($data, $code, $headers);
+}
+
 /**
  * Exception class for aborting if error response already sent.
  */
-class ApiAbort extends Exception
-{
-}
+class ApiAbort extends Exception {}
 
 /**
  * Class to support retrieving recorder metrics data.
@@ -74,8 +72,7 @@ class ApiAbort extends Exception
  * Retrieves key/value pairs for info required for the /user-stats advanced
  * report.
  */
-class RecorderMetrics
-{
+class RecorderMetrics {
   /**
    * Prebuilt Elasticsearch query code for the project filter.
    *
@@ -118,7 +115,7 @@ class RecorderMetrics
    *
    * @var float
    */
-  private $medianOverallRarity = null;
+  private $medianOverallRarity = NULL;
 
   /**
    * Constructor, stores settings.
@@ -126,8 +123,7 @@ class RecorderMetrics
    * @param int $userId
    *   Warehouse ID of the user to report on.
    */
-  public function __construct($userId)
-  {
+  public function __construct($userId) {
     iform_load_helpers(['helper_base', 'ElasticsearchProxyHelper']);
     $this->userId = $userId;
   }
@@ -194,8 +190,7 @@ JSON;
    * @return array
    *   Key value array of recording metrics.
    */
-  public function getUserMetrics(array $filters)
-  {
+  public function getUserMetrics(array $filters) {
     $this->applyFilters($filters);
     $this->getSpeciesWithRarity();
     $userRecordingData = $this->getUserRecordingData();
@@ -223,8 +218,9 @@ JSON;
       );
       // Now a simple ratio calculation, unless there were no in-season days yet.
       if ($inSeasonRecordingDaysTotal === 0) {
-        $activityRatio = null;
-      } else {
+        $activityRatio = NULL;
+      }
+      else {
         $inSeasonRecordingDaysActive =
           $userInfo->summer_filter->summer_recording_days->value;
         $activityRatio = round(
@@ -235,7 +231,7 @@ JSON;
 
       // Now look through the user's species list to work out median rarity.
       $recordsFoundSoFar = 0;
-      $medianUserRarity = null;
+      $medianUserRarity = NULL;
       $userSpeciesCountData = [];
       // Get a simple list of the user's taxa counts.
       foreach ($userInfo->species_list->buckets as $i => $speciesInfo) {
@@ -264,8 +260,7 @@ JSON;
       'myProjectRecords' => $userInfo->doc_count ?? 0,
       'myProjectSpecies' => $userInfo->species_count->value ?? 0,
       'myProjectRecordsThisYear' => $userInfo->this_year_filter->doc_count ?? 0,
-      'myProjectSpeciesThisYear' =>
-        $userInfo->this_year_filter->species_count->value ?? 0,
+      'myProjectSpeciesThisYear' => $userInfo->this_year_filter->species_count->value ?? 0,
       'myProjectSpeciesRatio' => $speciesRatio ?? 0,
       'myProjectActivityRatio' => $activityRatio ?? 0,
       'myProjectRarityMetric' => $rarityMetric ?? 0,
@@ -288,8 +283,7 @@ JSON;
    * @return array
    *   Key value array of recording metrics.
    */
-  public function getCounts(array $filters, array $categories)
-  {
+  public function getCounts(array $filters, array $categories) {
     $this->applyFilters($filters);
     $aggs = [];
     // Add the required aggregations. Records count is always in the result.
@@ -346,8 +340,7 @@ JSON;
    * @return array
    *   Array of species/taxon data.
    */
-  public function getRecordedTaxaList(array $filters, $speciesOnly = false)
-  {
+  public function getRecordedTaxaList(array $filters, $speciesOnly = FALSE) {
     $extraFilters = [];
     $extraFiltersCacheKeys = [];
     if ($speciesOnly) {
@@ -444,8 +437,7 @@ JSON;
    * @param string $dateString
    *   Date as an ISO string.
    */
-  private function getFirstInSeasonDateArray($dateString)
-  {
+  private function getFirstInSeasonDateArray($dateString) {
     $firstRecordDateArray = getdate(strtotime($dateString));
     // Align out of season date to the recording season.
     if ($firstRecordDateArray['mon'] < 6 || $firstRecordDateArray['mon'] > 8) {
@@ -468,8 +460,7 @@ JSON;
    * @param string $dateString
    *   Date as an ISO string.
    */
-  private function getLastInSeasonDateArray($dateString)
-  {
+  private function getLastInSeasonDateArray($dateString) {
     $lastRecordDateArray = getdate(strtotime($dateString));
     // Align out of season date to the recording season.
     if ($lastRecordDateArray['mon'] < 6 || $lastRecordDateArray['mon'] > 8) {
@@ -510,14 +501,14 @@ JSON;
     $firstRecordDate = new DateTime(
       "$firstInSeasonRecordDateArray[year]-$firstInSeasonRecordDateArray[mon]-$firstInSeasonRecordDateArray[mday]"
     );
-    $inSeasonRecordingDaysTotal -= $startOfSummer->diff($firstRecordDate, true)
+    $inSeasonRecordingDaysTotal -= $startOfSummer->diff($firstRecordDate, TRUE)
       ->days;
     // If end date not 31st August, subtract the days the recorder missed.
     $endOfSummer = new DateTime("$lastInSeasonRecordDateArray[year]-08-31");
     $lastRecordDate = new DateTime(
       "$lastInSeasonRecordDateArray[year]-$lastInSeasonRecordDateArray[mon]-$lastInSeasonRecordDateArray[mday]"
     );
-    $inSeasonRecordingDaysTotal -= $endOfSummer->diff($lastRecordDate, true)
+    $inSeasonRecordingDaysTotal -= $endOfSummer->diff($lastRecordDate, TRUE)
       ->days;
     return $inSeasonRecordingDaysTotal;
   }
@@ -531,17 +522,16 @@ JSON;
    * @return object
    *   Response object (decoded from JSON).
    */
-  private function getEsResponse($request)
-  {
-    $config = hostsite_get_es_config(null);
+  private function getEsResponse($request) {
+    $config = hostsite_get_es_config(NULL);
     $warehouseUrl = $config['indicia']['base_url'];
     $esEndpoint = $config['es']['endpoint'];
     $url = "{$warehouseUrl}index.php/services/rest/$esEndpoint/_search";
     $session = curl_init();
     // Set the POST options.
     curl_setopt($session, CURLOPT_URL, $url);
-    curl_setopt($session, CURLOPT_HEADER, false);
-    curl_setopt($session, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($session, CURLOPT_HEADER, FALSE);
+    curl_setopt($session, CURLOPT_RETURNTRANSFER, TRUE);
     curl_setopt(
       $session,
       CURLOPT_HTTPHEADER,
@@ -559,7 +549,8 @@ JSON;
       if ($errorInfo && $errorInfo->status) {
         // If a handled server error, we can set a proper response error.
         return error_print2($httpCode, $errorInfo->status, $errorInfo->message);
-      } else {
+      }
+      else {
         // If we can't do it properly, still best not to swallow it.
         return error_print2(500, 'Internal Server Error', $response);
       }
@@ -573,8 +564,7 @@ JSON;
    * @return array
    *   List of ES bucket objects, containing a key (taxonID) and doc_count.
    */
-  private function getSpeciesList()
-  {
+  private function getSpeciesList() {
     // This data can be cached as rate of change will be slow.
     $cacheKey = array_merge(
       [
@@ -583,7 +573,7 @@ JSON;
       $this->esQueryCacheOpts
     );
     $taxaResponse = helper_base::cache_get($cacheKey);
-    if ($taxaResponse === false) {
+    if ($taxaResponse === FALSE) {
       // Get a list of all taxa recorded in project, ordered by document count.
       $request = <<<JSON
        {
@@ -601,7 +591,8 @@ JSON;
 JSON;
       $taxaResponse = $this->getEsResponse($request);
       helper_base::cache_set($cacheKey, json_encode($taxaResponse));
-    } else {
+    }
+    else {
       $taxaResponse = json_decode($taxaResponse);
     }
     // ES 6/7 tolerance.
@@ -619,8 +610,7 @@ JSON;
    *
    * Also calculates the medianOverallRarity.
    */
-  private function getSpeciesWithRarity()
-  {
+  private function getSpeciesWithRarity() {
     $speciesList = $this->getSpeciesList();
     $recordsFoundSoFar = 0;
     // Work through the list of taxa from commonest to rarest, assigning a
@@ -628,7 +618,8 @@ JSON;
     foreach ($speciesList as $i => $speciesInfo) {
       if ($this->projectSpeciesCount === 1) {
         $thisSpeciesRarity = 50;
-      } else {
+      }
+      else {
         $thisSpeciesRarity = 1 + (99 * $i) / ($this->projectSpeciesCount - 1);
       }
       $this->speciesRarityData[$speciesInfo->key] = $thisSpeciesRarity;
@@ -647,8 +638,7 @@ JSON;
   /**
    * Uses an ES aggregation to find data required to build a user's metrics.
    */
-  private function getUserRecordingData()
-  {
+  private function getUserRecordingData() {
     $year = date("Y");
     // Collect data about the user's records.
     $request = <<<JSON
@@ -744,8 +734,7 @@ JSON;
    * @return int
    *   Record count.
    */
-  private function getMyTotalRecordsCount()
-  {
+  private function getMyTotalRecordsCount() {
     $request = <<<JSON
       {
         "size": "0",
@@ -766,4 +755,5 @@ JSON;
       ? $response->hits->total->value
       : $response->hits->total;
   }
+
 }
