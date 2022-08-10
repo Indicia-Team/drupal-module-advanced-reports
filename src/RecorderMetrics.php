@@ -33,7 +33,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  *   Status of the header.
  * @param string $title
  *   Title of the error.
- * @param array $errors
+ * @param array|null $errors
  *   If multiple errors then it can be passed as an array.
  */
 function error_print2($code, $status, $title, $errors = NULL) {

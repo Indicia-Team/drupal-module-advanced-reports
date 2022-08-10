@@ -19,11 +19,10 @@ if (!defined('INDICIA_ID_FIELD')) {
  *   Status of the header.
  * @param string $title
  *   Title of the error.
- * @param null $errors
+ * @param array|null $errors
  *   If multiple errors then it can be passed as an array.
  */
-function error($code, $status, $title, $errors = null)
-{
+function error($code, $status, $title, $errors = NULL) {
   $headers = [
     'Status' => $code . ' ' . $status,
     'Access-Control-Allow-Origin' => '*',
@@ -39,7 +38,8 @@ function error($code, $status, $title, $errors = null)
         ],
       ],
     ];
-  } else {
+  }
+  else {
     $data = [
       'errors' => $errors,
     ];
@@ -53,8 +53,8 @@ function error($code, $status, $title, $errors = null)
  * Provides report outputs that are mash-ups, Elasticsearch based, or more
  * complex than simple reporting services calls.
  */
-class AdvancedReportController extends ControllerBase
-{
+class AdvancedReportController extends ControllerBase {
+
   /**
    * GET method handler for advanced reports.
    *
@@ -64,8 +64,7 @@ class AdvancedReportController extends ControllerBase
    * @return Symfony\Component\HttpFoundation\JsonResponse
    *   Report response or error response.
    */
-  public function get($report)
-  {
+  public function get($report) {
     $validReports = ['user-stats', 'counts', 'recorded-taxa-list'];
     if (empty($report) || !in_array($report, $validReports)) {
       return error(400, 'Bad Request', 'Missing or incorrect report url.');
@@ -93,7 +92,8 @@ class AdvancedReportController extends ControllerBase
         // Count categories defaults to just records.
         if (!isset($_GET['categories'])) {
           $categories = ['records'];
-        } else {
+        }
+        else {
           $categories = explode(',', $_GET['categories']);
           foreach ($categories as $category) {
             $validCategories = ['records', 'species', 'photos', 'recorders'];
@@ -114,12 +114,12 @@ class AdvancedReportController extends ControllerBase
         $excludeHigherTaxa =
           isset($_GET['exclude_higher_taxa']) &&
           $_GET['exclude_higher_taxa'] === 't'
-            ? true
-            : false;
+            ? TRUE
+            : FALSE;
         $speciesOnly =
           isset($_GET['species_only']) && $_GET['species_only'] === 't'
-            ? true
-            : false;
+            ? TRUE
+            : FALSE;
         $output = $rm->getRecordedTaxaList(
           $filters,
           $excludeHigherTaxa || $speciesOnly
@@ -133,8 +133,7 @@ class AdvancedReportController extends ControllerBase
       'Status' => '200 OK',
       'Access-Control-Allow-Origin' => '*',
       'Access-Control-Allow-Methods' => 'GET,PUT,OPTIONS',
-      'Access-Control-Allow-Headers' =>
-        'authorization, x-api-key, content-type',
+      'Access-Control-Allow-Headers' => 'authorization, x-api-key, content-type',
     ];
     return new JsonResponse($output, '200', $headers);
   }
@@ -147,12 +146,13 @@ class AdvancedReportController extends ControllerBase
    *
    * @param string $report
    *   Report name.
+   * @param int $userId
+   *   Warehouse user ID to filter reports for.
    *
    * @return Symfony\Component\HttpFoundation\JsonResponse
    *   Error response or NULL.
    */
-  private function validateFilterParameters($report, $userId)
-  {
+  private function validateFilterParameters($report, $userId) {
     // All requests must be for a survey or a group/activity.
     if (empty($_GET['survey_id']) && empty($_GET['group_id'])) {
       // @todo Add support for website_id filter, but need to check error
@@ -172,7 +172,7 @@ class AdvancedReportController extends ControllerBase
       // Can only request your own data.
       return error(401, 'Unauthorized', "Cannot request other user's data.");
     }
-    return null;
+    return NULL;
   }
 
   /**
@@ -185,11 +185,11 @@ class AdvancedReportController extends ControllerBase
    *   Filters in the form of key/value pairs where the keys are ES document
    *   field names.
    */
-  private function getFilters($report)
-  {
+  private function getFilters($report) {
     if (!empty($_GET['survey_id'])) {
       $filters = ['metadata.survey.id' => $_GET['survey_id']];
-    } elseif (!empty($_GET['group_id'])) {
+    }
+    elseif (!empty($_GET['group_id'])) {
       $filters = ['metadata.group.id' => $_GET['group_id']];
     }
     // Optional taxon group filter.
@@ -206,4 +206,5 @@ class AdvancedReportController extends ControllerBase
     }
     return $filters;
   }
+
 }
