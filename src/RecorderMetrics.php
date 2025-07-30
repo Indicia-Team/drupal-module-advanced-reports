@@ -160,6 +160,16 @@ JSON;
     $this->esQueryCacheOpts = $extraFiltersCacheKeys;
     // Apply simple term filters.
     foreach ($filters as $field => $value) {
+      if ($field=="metadata.survey.id") {
+          $surveyAS = explode(",",$value);
+          $surveyAI = array_map('intval', $surveyAS );
+          $filterTermFilterArray[] = json_encode([
+            "terms" => [
+              $field => $surveyAI
+            ]
+          ]);
+        $this->esQueryCacheOpts[$field] = $surveyAI;
+      } else {
       $filterTermFilterArray[] = <<<JSON
         {
           "term": {
@@ -167,9 +177,14 @@ JSON;
           }
         }
 JSON;
+
       // Add simple term filter to the cache key.
       $this->esQueryCacheOpts[$field] = $value;
     }
+      // Add simple term filter to the cache key.
+
+    }
+    
     $filterTermFilters = implode(',', $filterTermFilterArray);
     $this->esQuery = <<<JSON
     {
