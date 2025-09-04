@@ -118,6 +118,13 @@ class RecorderMetrics {
   private $medianOverallRarity = NULL;
 
   /**
+   * Authenticated user ID to report on.
+   *
+   * @var int
+   */
+  private $userId;
+
+  /**
    * Constructor, stores settings.
    *
    * @param int $userId
@@ -184,7 +191,7 @@ JSON;
       // Add simple term filter to the cache key.
 
     }
-    
+
     $filterTermFilters = implode(',', $filterTermFilterArray);
     $this->esQuery = <<<JSON
     {
