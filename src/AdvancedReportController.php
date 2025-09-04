@@ -149,7 +149,7 @@ class AdvancedReportController extends ControllerBase {
    * @param int $userId
    *   Warehouse user ID to filter reports for.
    *
-   * @return Symfony\Component\HttpFoundation\JsonResponse
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   Error response or NULL.
    */
   private function validateFilterParameters($report, $userId) {

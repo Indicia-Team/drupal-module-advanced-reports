@@ -118,6 +118,13 @@ class RecorderMetrics {
   private $medianOverallRarity = NULL;
 
   /**
+   * Authenticated user ID to report on.
+   *
+   * @var int
+   */
+  private $userId;
+
+  /**
    * Constructor, stores settings.
    *
    * @param int $userId
@@ -155,29 +162,43 @@ class RecorderMetrics {
           "metadata.trial": false
         }
       }
-JSON;
+    JSON;
     // Reset the cache key and apply extraFiltersCacheKeys.
     $this->esQueryCacheOpts = $extraFiltersCacheKeys;
     // Apply simple term filters.
     foreach ($filters as $field => $value) {
-      $filterTermFilterArray[] = <<<JSON
-        {
-          "term": {
-            "$field": $value
+      if ($field === 'metadata.survey.id') {
+        $surveyAS = explode(",",$value);
+        $surveyAI = array_map('intval', $surveyAS);
+        $filterTermFilterArray[] = json_encode([
+          "terms" => [
+            $field => $surveyAI
+          ]
+        ]);
+        $this->esQueryCacheOpts[$field] = $surveyAI;
+      }
+      else {
+        $filterTermFilterArray[] = <<<JSON
+          {
+            "term": {
+              "$field": $value
+            }
           }
-        }
-JSON;
-      // Add simple term filter to the cache key.
-      $this->esQueryCacheOpts[$field] = $value;
-    }
-    $filterTermFilters = implode(',', $filterTermFilterArray);
-    $this->esQuery = <<<JSON
-    {
-      "bool": {
-        "must": [$filterTermFilters]
+          JSON;
+
+        // Add simple term filter to the cache key.
+        $this->esQueryCacheOpts[$field] = $value;
       }
     }
-JSON;
+
+    $filterTermFilters = implode(',', $filterTermFilterArray);
+    $this->esQuery = <<<JSON
+      {
+        "bool": {
+          "must": [$filterTermFilters]
+        }
+      }
+      JSON;
   }
 
   /**
