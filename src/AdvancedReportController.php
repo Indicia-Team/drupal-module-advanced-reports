@@ -61,7 +61,7 @@ class AdvancedReportController extends ControllerBase {
    * @param string $report
    *   Name of the report (from the URL path).
    *
-   * @return Symfony\Component\HttpFoundation\JsonResponse
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   Report response or error response.
    */
   public function get($report) {
@@ -82,52 +82,57 @@ class AdvancedReportController extends ControllerBase {
 
     $rm = new \RecorderMetrics($userId);
 
-    // Call report code.
-    switch ($report) {
-      case 'user-stats':
-        $output = $rm->getUserMetrics($filters);
-        break;
+    try {
+      // Call report code.
+      switch ($report) {
+        case 'user-stats':
+          $output = $rm->getUserMetrics($filters);
+          break;
 
-      case 'counts':
-        // Count categories defaults to just records.
-        if (!isset($_GET['categories'])) {
-          $categories = ['records'];
-        }
-        else {
-          $categories = explode(',', $_GET['categories']);
-          foreach ($categories as $category) {
-            $validCategories = ['records', 'species', 'photos', 'recorders'];
-            if (!in_array($category, $validCategories)) {
-              return error(
-                400,
-                'Bad Request',
-                "Parameter for categories contains invalid value $category."
-              );
+        case 'counts':
+          // Count categories defaults to just records.
+          if (!isset($_GET['categories'])) {
+            $categories = ['records'];
+          }
+          else {
+            $categories = explode(',', $_GET['categories']);
+            foreach ($categories as $category) {
+              $validCategories = ['records', 'species', 'photos', 'recorders'];
+              if (!in_array($category, $validCategories)) {
+                return error(
+                  400,
+                  'Bad Request',
+                  "Parameter for categories contains invalid value $category."
+                );
+              }
             }
           }
-        }
-        $output = $rm->getCounts($filters, $categories);
-        break;
+          $output = $rm->getCounts($filters, $categories);
+          break;
 
-      case 'recorded-taxa-list':
-        // @deprecated exclude_higher_taxa parameter - use species_only instead.
-        $excludeHigherTaxa =
-          isset($_GET['exclude_higher_taxa']) &&
-          $_GET['exclude_higher_taxa'] === 't'
-            ? TRUE
-            : FALSE;
-        $speciesOnly =
-          isset($_GET['species_only']) && $_GET['species_only'] === 't'
-            ? TRUE
-            : FALSE;
-        $output = $rm->getRecordedTaxaList(
-          $filters,
-          $excludeHigherTaxa || $speciesOnly
-        );
-        break;
+        case 'recorded-taxa-list':
+          // @deprecated exclude_higher_taxa parameter - use species_only instead.
+          $excludeHigherTaxa =
+            isset($_GET['exclude_higher_taxa']) &&
+            $_GET['exclude_higher_taxa'] === 't'
+              ? TRUE
+              : FALSE;
+          $speciesOnly =
+            isset($_GET['species_only']) && $_GET['species_only'] === 't'
+              ? TRUE
+              : FALSE;
+          $output = $rm->getRecordedTaxaList(
+            $filters,
+            $excludeHigherTaxa || $speciesOnly
+          );
+          break;
 
-      default:
-        return error(400, 'Bad Request', 'Unknown advanced report requested.');
+        default:
+          return error(400, 'Bad Request', 'Unknown advanced report requested.');
+      }
+    }
+    catch (\ApiAbort $e) {
+      return $e->getResponse();
     }
     $headers = [
       'Status' => '200 OK',

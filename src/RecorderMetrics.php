@@ -62,9 +62,38 @@ function error_print2($code, $status, $title, $errors = NULL) {
 }
 
 /**
- * Exception class for aborting if error response already sent.
+ * Exception class for aborting when an error response should be returned.
  */
-class ApiAbort extends Exception {}
+class ApiAbort extends Exception {
+
+  /**
+   * The response to return to the client.
+   *
+   * @var \Symfony\Component\HttpFoundation\JsonResponse
+   */
+  private $response;
+
+  /**
+   * Constructs the abort exception.
+   *
+   * @param \Symfony\Component\HttpFoundation\JsonResponse $response
+   *   Response to return to the client.
+   */
+  public function __construct(JsonResponse $response) {
+    parent::__construct();
+    $this->response = $response;
+  }
+
+  /**
+   * Returns the response to send back to the client.
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   The response to return.
+   */
+  public function getResponse() {
+    return $this->response;
+  }
+}
 
 /**
  * Class to support retrieving recorder metrics data.
@@ -573,11 +602,20 @@ JSON;
       $errorInfo = json_decode($response);
       if ($errorInfo && $errorInfo->status) {
         // If a handled server error, we can set a proper response error.
-        return error_print2($httpCode, $errorInfo->status, $errorInfo->message);
+        throw new ApiAbort(error_print2($httpCode, $errorInfo->status, $errorInfo->message));
+      }
+      elseif ($httpCode === 503) {
+        // If a 503, then we can show a warning message to the user.
+        throw new ApiAbort(error_print2(503, 'Service Unavailable', 'The Elasticsearch service is temporarily unavailable. Please try again shortly.'));
+      }
+      elseif ($httpCode === 0) {
+        // Network request did not complete, so likely the server is down or
+        // unreachable.
+        throw new ApiAbort(error_print2(523, 'Origin Is Unreachable', 'The Elasticsearch server is not reachable. Please try again shortly.'));
       }
       else {
         // If we can't do it properly, still best not to swallow it.
-        return error_print2(500, 'Internal Server Error', $response);
+        throw new ApiAbort(error_print2(500, 'Internal Server Error', $response));
       }
     }
     return json_decode($response);
